@@ -185,8 +185,15 @@ object AsrFinalFilters {
         var selectionStatus: PromptSelectionStatus? = null
 
         // 少于阈值时自动跳过 AI 后处理（forceAi 时不跳过）
+        // 词库 vocabulary 存在时强制润色：短句（如"打开 Obsidian"）也能被纠错，否则跳过阈值会直接放行错误识别结果
+        val hasVocabulary = try {
+            prefs.dictVocabPolishEnabled && prefs.getUserDictionary().vocabulary.any { it.isNotBlank() }
+        } catch (t: Throwable) {
+            Log.w(TAG, "vocabulary presence check failed", t)
+            false
+        }
         val skipForShort = try {
-            if (forceAi || prefs.postprocSkipUnderChars <= 0) {
+            if (forceAi || hasVocabulary || prefs.postprocSkipUnderChars <= 0) {
                 false
             } else {
                 TextSanitizer.countEffectiveChars(base) < prefs.postprocSkipUnderChars
@@ -239,15 +246,20 @@ object AsrFinalFilters {
                 val t0 = System.nanoTime()
                 notifyAiTimingStarted(aiTimingObserver)
                 try {
-                    // 词库 vocabulary 润色注入：在 system prompt 末尾追加"保持专有名词原样"指令
+                    // 词库 vocabulary 润色注入：system prompt 末尾追加"保持专有名词原样 + 发音相近纠正"指令。
+                    // 仅"保持原样"是防御指令（防 LLM 改写），无法把识别错的 opc/opsy 纠正为 Obsidian；
+                    // 追加"发音相近则纠正"后，LLM 才能把语音识别错误词修正为词库正确写法（与 PC AI-VoiceInput 体验一致）。
                     val promptWithVocabulary = try {
                         if (prefs.dictVocabPolishEnabled) {
-                            val vocab = prefs.getUserDictionary().vocabulary.filter { it.isNotBlank() }
+                            val vocab = prefs.getUserDictionary().vocabulary.filter { it.isNotBlank() }.distinct()
                             if (vocab.isNotEmpty()) {
                                 val basePrompt = effectivePromptOverride ?: prefs.activePromptContent
                                 val instruction =
-                                    "\n\n若识别文本中出现以下专有名词，请保持原样，不要改写：" +
-                                        vocab.joinToString("、")
+                                    "\n\n专有名词词库：" + vocab.joinToString("、") +
+                                        "\n请遵守：1) 词库中的词必须原样输出，禁止改写、翻译或拆分；" +
+                                        "2) 若识别文本中某个词与词库中的词发音相似但拼写不同（例如把 Obsidian 识别成 opc 或 opsy），" +
+                                        "必须纠正为词库中的正确写法；" +
+                                        "3) 词库之外的其余内容只修正明显错误与标点。"
                                 basePrompt + instruction
                             } else {
                                 effectivePromptOverride

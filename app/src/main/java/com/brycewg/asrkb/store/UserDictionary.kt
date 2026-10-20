@@ -37,15 +37,34 @@ data class UserDictionary(
 internal object UserDictionaryStore {
     private const val TAG = "UserDictionary"
 
+    // 内存缓存：raw 未变化时直接复用，避免每个按键/每次识别都 decode 全量 JSON。
+    @Volatile
+    private var cachedRaw: String? = null
+    @Volatile
+    private var cachedDict: UserDictionary? = null
+
     fun get(prefs: Prefs, json: Json): UserDictionary {
         val raw = prefs.userDictionaryJson
-        if (raw.isBlank()) return UserDictionary()
-        return try {
+        if (raw.isBlank()) {
+            if (cachedRaw != "") {
+                cachedRaw = ""
+                cachedDict = UserDictionary()
+            }
+            return UserDictionary()
+        }
+        val cached = cachedDict
+        if (raw == cachedRaw && cached != null) return cached
+        val dict = try {
             json.decodeFromString<UserDictionary>(raw)
         } catch (e: Exception) {
             Log.e(TAG, "Failed to parse UserDictionary JSON", e)
             UserDictionary()
         }
+        if (raw != cachedRaw) {
+            cachedRaw = raw
+            cachedDict = dict
+        }
+        return dict
     }
 
     fun set(prefs: Prefs, json: Json, dict: UserDictionary) {
