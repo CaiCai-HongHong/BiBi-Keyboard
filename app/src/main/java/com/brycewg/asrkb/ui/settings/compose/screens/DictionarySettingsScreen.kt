@@ -155,6 +155,7 @@ fun DictionarySettingsScreen(
                         SettingsPreferenceGroup(
                             SettingsEntry.Action(
                                 id = "vocab_empty",
+                                titleRes = 0,
                                 title = context.getString(R.string.dict_empty_vocabulary),
                                 enabled = false,
                                 onClick = {}
@@ -165,6 +166,7 @@ fun DictionarySettingsScreen(
                             *dict.vocabulary.mapIndexed { index, word ->
                                 SettingsEntry.Action(
                                     id = "vocab_$index",
+                                    titleRes = 0,
                                     title = word,
                                     icon = Icons.Rounded.Delete,
                                     onClick = {
@@ -215,6 +217,7 @@ fun DictionarySettingsScreen(
                         SettingsPreferenceGroup(
                             SettingsEntry.Action(
                                 id = "alias_empty",
+                                titleRes = 0,
                                 title = context.getString(R.string.dict_empty_aliases),
                                 enabled = false,
                                 onClick = {}
@@ -225,6 +228,7 @@ fun DictionarySettingsScreen(
                             *dict.aliases.mapIndexed { index, alias ->
                                 SettingsEntry.Action(
                                     id = "alias_$index",
+                                    titleRes = 0,
                                     title = alias.wrong + " → " + alias.correct,
                                     icon = Icons.Rounded.Delete,
                                     onClick = {
@@ -281,6 +285,7 @@ fun DictionarySettingsScreen(
                         SettingsPreferenceGroup(
                             SettingsEntry.Action(
                                 id = "snippet_empty",
+                                titleRes = 0,
                                 title = context.getString(R.string.dict_empty_snippets),
                                 enabled = false,
                                 onClick = {}
@@ -291,6 +296,7 @@ fun DictionarySettingsScreen(
                             *dict.snippets.mapIndexed { index, snippet ->
                                 SettingsEntry.Action(
                                     id = "snippet_$index",
+                                    titleRes = 0,
                                     title = snippet.trigger,
                                     summary = snippet.content,
                                     icon = Icons.Rounded.Delete,

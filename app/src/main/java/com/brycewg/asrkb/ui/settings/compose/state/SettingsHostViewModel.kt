@@ -136,6 +136,7 @@ class SettingsHostViewModel(
         BibiSettingsRoute.ApiLog -> 1
 
         BibiSettingsRoute.Backup,
+        BibiSettingsRoute.Dictionary,
         BibiSettingsRoute.Other,
         BibiSettingsRoute.About,
         BibiSettingsRoute.Paywall,

@@ -1,5 +1,16 @@
 # Changelog
 
+## v4.6.0 (2026-10-20)
+
+### New Features
+
+- **User Dictionary (BiBi Fork enhancement)**: Settings → Backup → Dictionary management with vocabulary, misheard-word aliases, and phrase snippets
+- **Local Alias Replacement**: Misheard words in recognition results are replaced offline by the alias table (e.g. 奥比斯迪安 → Obsidian), never sent to cloud
+- **Keep Proper Nouns**: AI polish prompt is injected with dictionary vocabulary so proper nouns stay unchanged
+- **PC dictionary.json Import/Export**: Two-way exchange with the Windows custom voice input IME via clipboard JSON
+
+---
+
 ## v4.5.2 (2026-10-12)
 
 ### New Features

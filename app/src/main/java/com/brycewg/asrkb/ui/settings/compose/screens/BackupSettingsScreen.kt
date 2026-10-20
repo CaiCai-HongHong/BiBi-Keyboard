@@ -126,6 +126,7 @@ fun BackupSettingsScreen(
                     id = "open_dictionary",
                     titleRes = R.string.open_dictionary_settings,
                     icon = Icons.Rounded.MenuBook,
+                    enabled = true,
                     index = 0,
                     count = 1,
                     onClick = onOpenDictionary
