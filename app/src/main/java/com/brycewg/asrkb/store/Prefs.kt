@@ -22,6 +22,7 @@ import com.brycewg.asrkb.asr.LlmVendor
 import com.brycewg.asrkb.asr.VolcAsrModelCatalog
 import com.brycewg.asrkb.clipboard.ClipboardSyncReceiveMode
 import com.brycewg.asrkb.imebridge.ImeBridgeRuntimeShutdown
+import com.brycewg.asrkb.util.UserDictionaryAliasReplacer
 import kotlin.reflect.KProperty
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -1032,6 +1033,40 @@ class Prefs(context: Context) {
     fun setSpeechPresets(list: List<SpeechPreset>) = SpeechPresetStore.setSpeechPresets(this, json, list)
 
     fun findSpeechPresetReplacement(original: String): String? = SpeechPresetStore.findSpeechPresetReplacement(this, json, original)
+
+    // ---------- 用户词库（vocabulary / aliases / snippets，兼容 PC dictionary.json） ----------
+    var userDictionaryJson: String
+        get() = sp.getString(KEY_USER_DICTIONARY_JSON, "") ?: ""
+        set(value) = sp.edit { putString(KEY_USER_DICTIONARY_JSON, value) }
+
+    /** 是否启用 aliases 本地替换（错词 -> 正确词）。 */
+    var dictAliasesEnabled: Boolean
+        get() = getPrefBoolean(KEY_DICT_ALIASES_ENABLED, true)
+        set(value) = setPrefBoolean(KEY_DICT_ALIASES_ENABLED, value)
+
+    /** 是否在 AI 润色 system prompt 中注入 vocabulary"保持原样"指令。 */
+    var dictVocabPolishEnabled: Boolean
+        get() = getPrefBoolean(KEY_DICT_VOCAB_POLISH_ENABLED, true)
+        set(value) = setPrefBoolean(KEY_DICT_VOCAB_POLISH_ENABLED, value)
+
+    /** 是否向支持 prompt 的 ASR 引擎注入 vocabulary 偏置（Phase 2 接入引擎）。 */
+    var dictVocabAsrEnabled: Boolean
+        get() = getPrefBoolean(KEY_DICT_VOCAB_ASR_ENABLED, false)
+        set(value) = setPrefBoolean(KEY_DICT_VOCAB_ASR_ENABLED, value)
+
+    fun getUserDictionary(): UserDictionary = UserDictionaryStore.get(this, json)
+
+    fun setUserDictionary(dict: UserDictionary) = UserDictionaryStore.set(this, json, dict)
+
+    /** 解析 PC 端 dictionary.json 文本并返回转换后的词库（不自动保存）。 */
+    fun parsePcDictionaryJson(text: String): UserDictionary = UserDictionaryStore.fromPcJson(text)
+
+    /** 导出为 PC 端 dictionary.json 兼容文本。 */
+    fun exportPcDictionaryJson(dict: UserDictionary = getUserDictionary()): String =
+        UserDictionaryStore.toPcJson(dict)
+
+    /** 对文本应用 aliases 本地替换（开关开启时）。 */
+    fun applyDictionaryAliases(text: String): String = UserDictionaryAliasReplacer.replace(this, text)
 
     // SiliconFlow凭证
     var sfApiKey: String by stringPref(KEY_SF_API_KEY, "")

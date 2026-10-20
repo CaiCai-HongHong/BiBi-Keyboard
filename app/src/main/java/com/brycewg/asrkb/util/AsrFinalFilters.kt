@@ -76,11 +76,19 @@ object AsrFinalFilters {
         }
 
         // 预置替换（最高优先级，直接返回替换文案）
-        return try {
-            val rep = prefs.findSpeechPresetReplacement(out)
-            if (!rep.isNullOrEmpty()) rep else out
+        val presetRep = try {
+            prefs.findSpeechPresetReplacement(out)
         } catch (t: Throwable) {
             Log.w(TAG, "speech preset replacement failed", t)
+            null
+        }
+        if (!presetRep.isNullOrEmpty()) return presetRep
+
+        // 词库 aliases 本地替换（错词 -> 正确词）
+        return try {
+            prefs.applyDictionaryAliases(out)
+        } catch (t: Throwable) {
+            Log.w(TAG, "dictionary alias replacement failed", t)
             out
         }
     }
@@ -231,10 +239,30 @@ object AsrFinalFilters {
                 val t0 = System.nanoTime()
                 notifyAiTimingStarted(aiTimingObserver)
                 try {
+                    // 词库 vocabulary 润色注入：在 system prompt 末尾追加"保持专有名词原样"指令
+                    val promptWithVocabulary = try {
+                        if (prefs.dictVocabPolishEnabled) {
+                            val vocab = prefs.getUserDictionary().vocabulary.filter { it.isNotBlank() }
+                            if (vocab.isNotEmpty()) {
+                                val basePrompt = effectivePromptOverride ?: prefs.activePromptContent
+                                val instruction =
+                                    "\n\n若识别文本中出现以下专有名词，请保持原样，不要改写：" +
+                                        vocab.joinToString("、")
+                                basePrompt + instruction
+                            } else {
+                                effectivePromptOverride
+                            }
+                        } else {
+                            effectivePromptOverride
+                        }
+                    } catch (t: Throwable) {
+                        Log.w(TAG, "vocabulary polish prompt failed", t)
+                        effectivePromptOverride
+                    }
                     val res = postProcessor.processWithStatus(
                         base,
                         prefs,
-                        effectivePromptOverride,
+                        promptWithVocabulary,
                         onStreamingUpdate = onStreamingUpdate
                     )
                     ok = res.ok

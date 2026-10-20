@@ -159,6 +159,13 @@ private fun SettingsRouteContent(
         BibiSettingsRoute.Backup -> BackupSettingsScreen(
             uiMode = uiState.uiMode,
             onBack = { onPopRoute() },
+            actions = actions,
+            onOpenDictionary = { onPushRoute(BibiSettingsRoute.Dictionary) }
+        )
+
+        BibiSettingsRoute.Dictionary -> DictionarySettingsScreen(
+            uiMode = uiState.uiMode,
+            onBack = { onPopRoute() },
             actions = actions
         )
 

@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Download
+import androidx.compose.material.icons.rounded.MenuBook
 import androidx.compose.material.icons.rounded.Upload
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -52,7 +53,8 @@ private const val TAG = "BackupSettingsScreen"
 fun BackupSettingsScreen(
     uiMode: BibiUiMode,
     onBack: () -> Unit,
-    actions: SettingsActionController
+    actions: SettingsActionController,
+    onOpenDictionary: () -> Unit = {}
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
     val prefs = remember(context) { Prefs(context) }
@@ -118,7 +120,20 @@ fun BackupSettingsScreen(
             contentPadding = SettingsLayoutMetrics.pageContentPadding(innerPadding),
             verticalArrangement = Arrangement.spacedBy(SettingsLayoutMetrics.SectionSpacing)
         ) {
-            item("file") {
+            item("dictionary") {
+            BackupSection(uiMode = uiMode, titleRes = R.string.section_user_dictionary) {
+                BackupActionPreference(
+                    id = "open_dictionary",
+                    titleRes = R.string.open_dictionary_settings,
+                    icon = Icons.Rounded.MenuBook,
+                    index = 0,
+                    count = 1,
+                    onClick = onOpenDictionary
+                )
+            }
+        }
+
+        item("file") {
                 BackupSection(uiMode = uiMode, titleRes = R.string.section_file_backup) {
                     BackupActionPreference(
                         id = "backup_export_file",

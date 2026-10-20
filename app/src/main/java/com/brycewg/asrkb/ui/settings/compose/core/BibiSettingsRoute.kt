@@ -53,6 +53,11 @@ sealed interface BibiSettingsRoute {
         override val id: String = "backup"
     }
 
+    /** 词库管理（vocabulary / aliases / snippets）。 */
+    data object Dictionary : BibiSettingsRoute {
+        override val id: String = "dictionary"
+    }
+
     data object Other : BibiSettingsRoute {
         override val id: String = "other"
     }
@@ -94,6 +99,7 @@ sealed interface BibiSettingsRoute {
             PromptSelection.id -> PromptSelection
             PromptSelectionPreview.id -> PromptSelectionPreview
             Backup.id -> Backup
+            Dictionary.id -> Dictionary
             Other.id -> Other
             About.id -> About
             Paywall.id -> Paywall
