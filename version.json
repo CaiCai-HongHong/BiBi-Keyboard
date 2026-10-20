@@ -1,11 +1,11 @@
 {
-  "version": "4.6.0",
-  "version_code": 179,
-  "download_url": "https://github.com/BryceWG/BiBi-Keyboard/releases/tag/v4.6.0",
-  "release_notes": "### 新增功能\n\n- **用户词库（BiBi Fork 自研增强）**：设置 → 备份 → 词库管理，新增词汇、错词别名、口令三类词条管理\n- **本地错词替换**：识别结果中的错词按别名表离线替换为正确写法（如 奥比斯迪安 → Obsidian），不上云\n- **专有名词保持原样**：AI 润色提示词注入词库词汇，要求不改写专有名词\n- **PC dictionary.json 导入/导出**：与 Windows 自研语音输入法词库双向互通（剪贴板 JSON）",
-  "release_notes_en": "### New Features\n\n- **User Dictionary (BiBi Fork enhancement)**: Settings → Backup → Dictionary management with vocabulary, misheard-word aliases, and phrase snippets\n- **Local Alias Replacement**: Misheard words in recognition results are replaced offline by the alias table (e.g. 奥比斯迪安 → Obsidian), never sent to cloud\n- **Keep Proper Nouns**: AI polish prompt is injected with dictionary vocabulary so proper nouns stay unchanged\n- **PC dictionary.json Import/Export**: Two-way exchange with the Windows custom voice input IME via clipboard JSON",
+  "version": "4.7.0",
+  "version_code": 180,
+  "download_url": "https://github.com/CaiCai-HongHong/BiBi-Keyboard/releases/tag/v4.7.0",
+  "release_notes": "### 改进优化\n\n- **词库纠错增强（BiBi Fork 自研）**：AI 润色提示词从\"保持专有名词原样\"升级为\"发音相近即纠正\"——识别成 opc/opsy 等近似音时，自动纠正为词库中的正确写法（如 Obsidian），与 PC AI-VoiceInput 体验一致\n- **短句强制润色**：词库存在时不再受\"低于 N 字符跳过 AI 后处理\"阈值影响，\"打开 Obsidian\" 这类短句也能走词库纠错\n- **词库解析缓存**：UserDictionary 增加内存缓存，避免每个按键/每次识别重复解析全量 JSON，降低输入法卡顿",
+  "release_notes_en": "Version 4.7.0 released",
   "important_notice": "1. 4.0.0 版本将迎来大量重构和众多更新，欢迎下载尝鲜\n2. BiBi Keyboard Pro版本已上架，欢迎在3.8.6后版本-关于页面中了解详情。\n3. 官方网站和使用文档均已上线,网址分别为: bibi.brycewg.com bibidocs.brycewg.com",
   "notice_level": "info",
   "min_supported_version": "2.6.5",
-  "update_time": "2026-10-20T21:45:39Z"
+  "update_time": "2026-10-20T23:20:37Z"
 }
