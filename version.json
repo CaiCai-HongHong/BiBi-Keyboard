@@ -1,11 +1,11 @@
 {
-  "version": "4.7.0",
-  "version_code": 180,
-  "download_url": "https://github.com/CaiCai-HongHong/BiBi-Keyboard/releases/tag/v4.7.0",
-  "release_notes": "### 改进优化\n\n- **词库纠错增强（BiBi Fork 自研）**：AI 润色提示词从\"保持专有名词原样\"升级为\"发音相近即纠正\"——识别成 opc/opsy 等近似音时，自动纠正为词库中的正确写法（如 Obsidian），与 PC AI-VoiceInput 体验一致\n- **短句强制润色**：词库存在时不再受\"低于 N 字符跳过 AI 后处理\"阈值影响，\"打开 Obsidian\" 这类短句也能走词库纠错\n- **词库解析缓存**：UserDictionary 增加内存缓存，避免每个按键/每次识别重复解析全量 JSON，降低输入法卡顿",
-  "release_notes_en": "Version 4.7.0 released",
+  "version": "4.7.1",
+  "version_code": 181,
+  "download_url": "https://github.com/CaiCai-HongHong/BiBi-Keyboard/releases/tag/v4.7.1",
+  "release_notes": "版本 4.7.1 已发布",
+  "release_notes_en": "Version 4.7.1 released",
   "important_notice": "1. 4.0.0 版本将迎来大量重构和众多更新，欢迎下载尝鲜\n2. BiBi Keyboard Pro版本已上架，欢迎在3.8.6后版本-关于页面中了解详情。\n3. 官方网站和使用文档均已上线,网址分别为: bibi.brycewg.com bibidocs.brycewg.com",
   "notice_level": "info",
   "min_supported_version": "2.6.5",
-  "update_time": "2026-10-20T23:20:37Z"
+  "update_time": "2026-11-10T00:27:28Z"
 }
