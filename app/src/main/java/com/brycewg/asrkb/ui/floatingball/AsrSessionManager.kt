@@ -779,10 +779,11 @@ class AsrSessionManager(
         }
         val hopStartedAt = SystemClock.elapsedRealtime()
         serviceScope.launch {
-            AsrCallLatencyProbe.log(
-                "t_final_hop",
-                mapOf("hop_ms" to (SystemClock.elapsedRealtime() - hopStartedAt).coerceAtLeast(0L))
-            )
+            try {
+                AsrCallLatencyProbe.log(
+                    "t_final_hop",
+                    mapOf("hop_ms" to (SystemClock.elapsedRealtime() - hopStartedAt).coerceAtLeast(0L))
+                )
             if (!isSessionActive(sessionToken)) return@launch
 
             completedHistoryTiming?.begin(AsrHistoryTimingStage.POSTPROCESS)
@@ -1062,6 +1063,15 @@ class AsrSessionManager(
 
             // 清理会话上下文
             clearPreviewSessionContext()
+            } catch (t: Throwable) {
+                Log.e(TAG, "Unexpected error in onFinal serviceScope.launch", t)
+            } finally {
+                if (isSessionActive(sessionToken) && asrEngine?.isRunning != true) {
+                    listener.onSessionStateChanged(FloatingBallState.Idle)
+                    clearActiveSessionToken(sessionToken)
+                    clearPreviewSessionContext()
+                }
+            }
         }
     }
 

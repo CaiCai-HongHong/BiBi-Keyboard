@@ -128,9 +128,17 @@ internal class DictationUseCase(
             promptSelectionMode =
             com.brycewg.asrkb.util.AsrFinalFilters.PromptSelectionMode.AUTO_IF_ENABLED,
             onPolishPrompt = updateAiProcessingPrompt
-        ) ?: return
+        )
+        if (postprocessResult == null) {
+            Log.w(TAG, "postprocessResult is null; transitioning to idle")
+            transitionToIdle(true)
+            return
+        }
 
-        if (isCancelled(seq)) return
+        if (isCancelled(seq)) {
+            transitionToIdle(true)
+            return
+        }
 
         val finalOut = postprocessResult.finalText
         val rawText = postprocessResult.rawText

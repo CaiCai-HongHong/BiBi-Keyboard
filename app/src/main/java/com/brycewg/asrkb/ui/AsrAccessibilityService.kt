@@ -56,7 +56,7 @@ class AsrAccessibilityService :
 
     companion object {
         private const val TAG = "AsrAccessibilityService"
-        private const val CLIPBOARD_RESTORE_DELAY_MS = 150L
+        private const val CLIPBOARD_RESTORE_DELAY_MS = 1500L
         const val ACTION_INSERT_TEXT = "com.brycewg.asrkb.action.INSERT_TEXT"
         const val EXTRA_TEXT = "text"
 
@@ -722,16 +722,39 @@ class AsrAccessibilityService :
                         logWrite(ok = true, path = InsertPath.PASTE.id)
                         return InsertPath.PASTE
                     }
+
+                    // 增强兜底：若 SET_TEXT 与 PASTE 均失败（常见于 Chrome/WebView/远程控制），尝试系统级 A11y IME 管道
+                    if (tryCommitViaA11yIme(delta)) {
+                        DebugLogManager.log("insert", "path_ime_fallback")
+                        logWrite(ok = true, path = InsertPath.IME.id)
+                        return InsertPath.IME
+                    }
+
                     copyDeltaAndToast(delta, "paste_failed")
                     return InsertPath.CLIPBOARD
                 }
 
                 Log.w(TAG, "No focused editable-like or input-focus node found")
+                // target 为 null 时的增强兜底：
+                // 1) 尝试 A11y IME 直接提交（网页/远程控制窗口焦点晃动时 IME 管道常依然连接）
+                if (tryCommitViaA11yIme(delta)) {
+                    DebugLogManager.log("insert", "path_ime_no_target")
+                    logWrite(ok = true, path = InsertPath.IME.id)
+                    return InsertPath.IME
+                }
+                // 2) 尝试直接在活动窗口根节点执行 PASTE
+                if (rootNode != null && performPasteFallback(rootNode, delta)) {
+                    DebugLogManager.log("insert", "path_paste_root_fallback")
+                    logWrite(ok = true, path = InsertPath.PASTE.id)
+                    return InsertPath.PASTE
+                }
+
                 val clipboardReason = if (rootNode == null) "root_null" else "no_target"
                 copyDeltaAndToast(delta, clipboardReason)
                 return InsertPath.CLIPBOARD
             } finally {
                 recycleNodeQuietly(target)
+                recycleNodeQuietly(rootNode)
             }
         } catch (e: Throwable) {
             Log.e(TAG, "Error inserting text", e)
@@ -873,8 +896,8 @@ class AsrAccessibilityService :
      * @return 操作成功返回结果，失败或未找到节点返回 null
      */
     private fun <T> withFocusedEditableNode(action: (AccessibilityNodeInfo) -> T): T? {
+        val rootNode = rootInActiveWindow ?: return null
         return try {
-            val rootNode = rootInActiveWindow ?: return null
             val focusedNode = findFocusedEditableNode(rootNode)
             if (focusedNode != null) {
                 try {
@@ -882,8 +905,9 @@ class AsrAccessibilityService :
                     val result = action(focusedNode)
                     result
                 } finally {
-                    @Suppress("DEPRECATION")
-                    focusedNode.recycle()
+                    if (focusedNode !== rootNode) {
+                        recycleNodeQuietly(focusedNode)
+                    }
                 }
             } else {
                 null
@@ -891,6 +915,8 @@ class AsrAccessibilityService :
         } catch (e: Throwable) {
             Log.e(TAG, "Error in withFocusedEditableNode", e)
             null
+        } finally {
+            recycleNodeQuietly(rootNode)
         }
     }
 
@@ -967,12 +993,13 @@ class AsrAccessibilityService :
             val child = node.getChild(i) ?: continue
             val result = findEditableNodeRecursive(child)
             if (result != null) {
-                @Suppress("DEPRECATION")
-                child.recycle()
+                // 严禁回收命中的目标节点，避免返回已被释放的节点导致 IPC 崩溃解绑服务
+                if (result !== child) {
+                    recycleNodeQuietly(child)
+                }
                 return result
             }
-            @Suppress("DEPRECATION")
-            child.recycle()
+            recycleNodeQuietly(child)
         }
         return null
     }
@@ -1123,12 +1150,49 @@ class AsrAccessibilityService :
         } catch (e: Throwable) {
             Log.e(TAG, "Error focusing target for paste fallback", e)
         }
-        val ok = try {
+        var ok = try {
             target.performAction(AccessibilityNodeInfo.ACTION_PASTE)
         } catch (e: Throwable) {
             Log.e(TAG, "Error performing ACTION_PASTE", e)
             false
         }
+
+        // 针对 Chrome / WebView / 远程控制场景：若目标节点不支持 PASTE，向上遍历父节点尝试
+        if (!ok) {
+            var parent: AccessibilityNodeInfo? = null
+            try {
+                parent = target.parent
+            } catch (_: Throwable) { }
+            var depth = 0
+            while (parent != null && !ok && depth < 5) {
+                try {
+                    ok = parent.performAction(AccessibilityNodeInfo.ACTION_PASTE)
+                } catch (_: Throwable) { }
+                val next = try {
+                    parent.parent
+                } catch (_: Throwable) {
+                    null
+                }
+                recycleNodeQuietly(parent)
+                parent = next
+                depth++
+            }
+            recycleNodeQuietly(parent)
+        }
+
+        // 若仍失败，尝试在当前活动窗口根节点执行 PASTE
+        if (!ok) {
+            val root = rootInActiveWindow
+            if (root != null) {
+                try {
+                    ok = root.performAction(AccessibilityNodeInfo.ACTION_PASTE)
+                } catch (_: Throwable) {
+                } finally {
+                    recycleNodeQuietly(root)
+                }
+            }
+        }
+
         if (ok) {
             scheduleClipboardRestore(clipboard, previous)
         }

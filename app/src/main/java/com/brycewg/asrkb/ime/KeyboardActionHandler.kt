@@ -1296,7 +1296,17 @@ class KeyboardActionHandler(
         state: KeyboardState.Listening,
         seq: Long
     ) {
-        val ic = getCurrentInputConnection() ?: return
+        val ic = getCurrentInputConnection()
+        if (ic == null) {
+            Log.w(TAG, "getCurrentInputConnection is null in handleNormalDictationFinal; fallback to clipboard and idle")
+            if (text.isNotBlank()) {
+                copyToClipboard(context, text)
+                uiListenerProvider?.invoke()?.onStatusMessage(context.getString(R.string.floating_asr_copied))
+                uiListenerProvider?.invoke()?.onVibrate()
+            }
+            transitionToIdle(keepMessage = true)
+            return
+        }
         dictationUseCase.handleFinal(ic, text, state, seq)
     }
 
