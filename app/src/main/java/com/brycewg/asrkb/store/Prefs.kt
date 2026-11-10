@@ -2526,7 +2526,7 @@ class Prefs(context: Context) {
         )
 
         // 悬浮写入兼容：默认目标包名（每行一个；支持前缀匹配）
-        const val DEFAULT_FLOATING_WRITE_COMPAT_PACKAGES = "org.telegram.messenger\nnu.gpu.nagram"
+        const val DEFAULT_FLOATING_WRITE_COMPAT_PACKAGES = "org.telegram.messenger\nnu.gpu.nagram\ntw.nekomimi.nekogram"
 
         // Soniox 默认端点
         const val SONIOX_API_BASE_URL = "https://api.soniox.com"

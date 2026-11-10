@@ -1300,9 +1300,14 @@ class KeyboardActionHandler(
         if (ic == null) {
             Log.w(TAG, "getCurrentInputConnection is null in handleNormalDictationFinal; fallback to clipboard and idle")
             if (text.isNotBlank()) {
-                copyToClipboard(context, text)
-                uiListenerProvider?.invoke()?.onStatusMessage(context.getString(R.string.floating_asr_copied))
-                uiListenerProvider?.invoke()?.onVibrate()
+                try {
+                    val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as? android.content.ClipboardManager
+                    cm?.setPrimaryClip(android.content.ClipData.newPlainText("ASR Result", text))
+                } catch (t: Throwable) {
+                    Log.e(TAG, "Failed to copy to clipboard", t)
+                }
+                uiListener?.onStatusMessage(context.getString(R.string.floating_asr_copied))
+                uiListener?.onVibrate()
             }
             transitionToIdle(keepMessage = true)
             return
